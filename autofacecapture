@@ -1,0 +1,39 @@
+import org.bytedeco.opencv.opencv_core.*;
+import org.bytedeco.opencv.opencv_objdetect.CascadeClassifier;
+import org.bytedeco.opencv.opencv_videoio.VideoCapture;
+import static org.bytedeco.opencv.global.opencv_highgui.*;
+import static org.bytedeco.opencv.global.opencv_imgproc.*;
+import static org.bytedeco.opencv.global.opencv_imgcodecs.*;
+public class autofacecapture {
+    public static void main(String[] args) {
+        org.bytedeco.javacpp.Loader.load(org.bytedeco.opencv.opencv_java.class);
+        VideoCapture camera = new VideoCapture(0);
+        CascadeClassifier faceDetector = new CascadeClassifier("haarcascade_frontalface_alt.xml");
+        Mat frame = new Mat();
+        int count = 0;
+        int id = 1; 
+        System.out.println("Starting dataset capture...");
+        while (true) {
+            camera.read(frame);
+            Mat gray = new Mat();
+            cvtColor(frame, gray, COLOR_BGR2GRAY);
+            RectVector faces = new RectVector();
+            faceDetector.detectMultiScale(gray, faces);
+            for (int i = 0; i < faces.size(); i++) {
+                Rect face = faces.get(i);
+                Mat faceCrop = new Mat(gray, face);
+                count++;
+                String filename = "dataset/user." + id + "." + count + ".jpg";
+                imwrite(filename, faceCrop);
+
+                System.out.println("Saved: " + filename);
+            }
+            if (count >= 50) break;
+            if (waitKey(30) == 27) break; 
+        }
+        camera.release();
+        System.out.println("Dataset collection done!");
+        camera.close();
+        faceDetector.close();
+    }
+}

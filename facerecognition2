@@ -1,0 +1,87 @@
+import org.bytedeco.opencv.opencv_core.*;
+import org.bytedeco.opencv.opencv_face.LBPHFaceRecognizer;
+import org.bytedeco.opencv.opencv_objdetect.CascadeClassifier;
+import org.bytedeco.opencv.opencv_videoio.VideoCapture;
+
+import static org.bytedeco.opencv.global.opencv_imgproc.*;
+import static org.bytedeco.opencv.global.opencv_highgui.*;
+
+import org.bytedeco.javacpp.IntPointer;
+import org.bytedeco.javacpp.DoublePointer;
+
+public class facerecognition2 {
+
+    public static void main(String[] args) {
+
+        CascadeClassifier detector =
+                new CascadeClassifier("haarcascade_frontalface_default.xml");
+
+        LBPHFaceRecognizer recognizer = LBPHFaceRecognizer.create();
+        recognizer.read("trainer.yml");
+
+        VideoCapture camera = new VideoCapture(0);
+
+        if (!camera.isOpened()) {
+            System.out.println("Camera not found!");
+            return;
+        }
+
+        Mat frame = new Mat();
+
+        boolean matched = false;
+        int attempts = 0;
+        int MAX_ATTEMPTS = 100;
+
+        while (attempts < MAX_ATTEMPTS) {
+
+            camera.read(frame);
+            if (frame.empty()) continue;
+
+            Mat gray = new Mat();
+            cvtColor(frame, gray, COLOR_BGR2GRAY);
+
+            RectVector faces = new RectVector();
+            detector.detectMultiScale(gray, faces);
+
+            for (int i = 0; i < faces.size(); i++) {
+
+                Rect face = faces.get(i);
+                Mat faceROI = new Mat(gray, face);
+
+                IntPointer label = new IntPointer(1);
+                DoublePointer confidence = new DoublePointer(1);
+
+                recognizer.predict(faceROI, label, confidence);
+
+                int id = label.get(0);
+                double conf = confidence.get(0);
+
+                if (conf < 40) {
+                    matched = true;
+                    System.out.println("MATCHED (ID: " + id + ", Confidence: " + conf + ")");
+                    break;
+                }
+            }
+
+            attempts++;
+
+            imshow("Face Check", frame);
+
+            if (waitKey(30) == 27) break; 
+
+            if (matched) {
+                System.out.println("FINAL RESULT: MATCHED");
+                camera.release();
+                destroyAllWindows();
+                return;
+            }
+        }
+
+        camera.release();
+        destroyAllWindows();
+
+        if (!matched) {
+            System.out.println("FINAL RESULT: NOT MATCHED");
+        }
+    }
+}
