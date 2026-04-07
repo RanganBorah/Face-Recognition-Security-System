@@ -2,173 +2,141 @@
 
 ## Overview
 
-This project implements a complete face recognition pipeline using Java and OpenCV (JavaCV). It includes:
+This project is a face recognition system built using Java and OpenCV (JavaCV). It allows you to:
 
-* Automatic dataset collection using webcam
-* Face training using LBPH (Local Binary Patterns Histogram)
+* Capture face images automatically using a webcam or iVCam
+* Store user information in a MySQL database
+* Train a face recognition model using LBPH algorithm
+* Recognize faces in real-time and fetch user details from the database
+
+## Features
+
+* Automatic face detection using Haar Cascade
+* Face dataset creation with labeled images
+* Model training using LBPH Face Recognizer
 * Real-time face recognition
+* MySQL database integration for user data
+* Auto camera detection with support for virtual cameras (iVCam)
 
 ## Technologies Used
 
 * Java
 * OpenCV (JavaCV / Bytedeco)
-* Haar Cascade Classifier
-* LBPH Face Recognizer
+* MySQL
+* JDBC
 
 ## Project Structure
 
-```
-FaceRecognitionProject/
+face_recognition/
 │
-├── dataset/                  # Captured face images
-├── trainer.yml              # Trained model file
+├── autofacecapture.java       # Capture images and store user data
+├── facetraining.java          # Train the model and generate trainer.yml
+├── facerecognition2.java      # Real-time face recognition
+├── DBHelperFetch.java         # Fetch user info from database
+│
+├── dataset/                   # Stored face images
+├── trainer.yml                # Trained model file
 ├── haarcascade_frontalface_alt.xml
-├── haarcascade_frontalface_default.xml
-│
-├── autofacecapture.java     # Dataset creation
-├── facetraining.java        # Model training
-├── facerecognition2.java    # Face recognition
-```
-
-## How It Works
-
-### 1. Dataset Collection
-
-The `autofacecapture` program captures images from the webcam and detects faces using Haar Cascade.
-
-* Converts frames to grayscale
-* Detects faces
-* Crops and saves face images
-* Stores images in `dataset/` folder
-
-File naming format:
-
-```
-user.<id>.<count>.jpg
-```
-
-Example:
-
-```
-user.1.1.jpg
-user.1.2.jpg
-```
-
-### 2. Training the Model
-
-The `facetraining` program trains the LBPH face recognizer.
-
-Steps:
-
-* Reads images from dataset folder
-* Extracts ID from filename
-* Converts labels into matrix format
-* Trains LBPH model
-* Saves trained model as `trainer.yml`
-
-### 3. Face Recognition
-
-The `facerecognition2` program performs real-time recognition.
-
-Steps:
-
-* Loads trained model (`trainer.yml`)
-* Captures video from webcam
-* Detects faces using Haar Cascade
-* Predicts face label and confidence
-* Matches if confidence < threshold (40)
-
-Output:
-
-* MATCHED: Face recognized
-* NOT MATCHED: Unknown face
 
 ## Setup Instructions
 
-### 1. Install Dependencies
+### 1. Install Requirements
 
-* Install Java (JDK 8 or above)
-* Add OpenCV (Bytedeco JavaCV) dependencies
+* Java (JDK 8 or higher)
+* MySQL Server
+* OpenCV (Bytedeco JavaCV bindings)
+* IDE (Eclipse / IntelliJ)
 
-### 2. Required Files
+### 2. Database Setup
 
-Ensure the following files are present:
+Create a database and table:
 
-* `haarcascade_frontalface_alt.xml`
-* `haarcascade_frontalface_default.xml`
+```sql
+CREATE DATABASE face_db;
 
-### 3. Update Paths
+USE face_db;
 
-Update dataset path in `facetraining.java`:
+CREATE TABLE users (
+    id INT PRIMARY KEY,
+    name VARCHAR(100),
+    age INT,
+    department VARCHAR(100),
+    info TEXT
+);
+```
+
+Update database credentials in code if needed:
 
 ```java
-File folder = new File("C:\\Users\\daksh\\eclipse-workspace\\FaceRecognitionProject\\dataset");
+String url = "jdbc:mysql://localhost:3306/face_db";
+String user = "root";
+String password = "noah";
 ```
 
-## Execution Steps
+### 3. Add Haar Cascade File
 
-### Step 1: Capture Dataset
+Download and place the file in the project root:
+
+* haarcascade_frontalface_alt.xml
+
+### 4. Run the Project
+
+#### Step 1: Capture Faces
 
 Run:
 
 ```
-autofacecapture
+autofacecapture.java
 ```
 
-* Captures 50 face images
-* Press ESC to stop early
+* Enter user details
+* System captures 50 images automatically
+* Images stored in dataset/
 
-### Step 2: Train Model
+#### Step 2: Train Model
+
+Training runs automatically after capture, or run manually:
+
+```
+facetraining.java
+```
+
+* Generates trainer.yml
+
+#### Step 3: Run Recognition
 
 Run:
 
 ```
-facetraining
+facerecognition2.java
 ```
 
-* Generates `trainer.yml`
+* Detects faces in real-time
+* Matches with trained data
+* Displays user ID and prints details in console
 
-### Step 3: Recognize Face
+## How It Works
 
-Run:
+1. Faces are detected using Haar Cascade Classifier
+2. Captured images are resized to 160x160 grayscale
+3. LBPH algorithm is used for training and prediction
+4. Recognized face ID is used to fetch user details from MySQL database
 
-```
-facerecognition2
-```
+## Notes
 
-* Opens webcam
-* Displays recognition result
-
-## Parameters
-
-### LBPH Recognizer
-
-* Default parameters used
-* Can be tuned for better accuracy
-
-### Confidence Threshold
-
-```
-if (conf < 40)
-```
-
-Lower value = stricter match
-Higher value = more lenient match
-
-## Limitations
-
-* Sensitive to lighting conditions
-* Requires clear frontal face
-* Accuracy depends on dataset quality
+* Ensure the dataset folder exists
+* Ensure trainer.yml is generated before recognition
+* Confidence threshold is set to 75 (can be adjusted)
+* Works with both physical webcam and iVCam
 
 ## Future Improvements
 
-* Add GUI interface
-* Support multiple users
+* GUI using JavaFX or Swing
+* Web integration using Spring Boot
+* Mobile app integration
+* Cloud database support
 * Improve accuracy using deep learning models
-* Add database integration
 
 ## Author
 
-B.Tech Electronics and Communication Engineering Student
-Interested in AI, Computer Vision, and Embedded Systems
+Developed as a B.Tech project for learning face recognition and AI concepts.
