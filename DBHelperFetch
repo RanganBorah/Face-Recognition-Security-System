@@ -1,0 +1,25 @@
+package face_recognition;
+import java.sql.*;
+
+public class DBHelperFetch {
+    public static String getUserInfo(int id) {
+        String url = "jdbc:mysql://localhost:3306/face_db";
+        String sql = "SELECT * FROM users WHERE id=?";
+
+        try (Connection con = DriverManager.getConnection(url, "root", "noah");
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return "\n--- MATCH FOUND ---\n"
+                            + "Name: " + rs.getString(2) + "\n"
+                            + "Age: " + rs.getInt(3) + "\n"
+                            + "Dept: " + rs.getString(4) + "\n"
+                            + "Info: " + rs.getString(5);
+                }
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return "User ID " + id + " not in database.";
+    }
+}
